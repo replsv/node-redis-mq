@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  http:
+    build: .
+    command: "yarn start-server"
+    volumes:
+      - ./:/app
+    env_file: "./env/env"
+    ports:
+      - "8080:8080"
+  ma_scheduler:
+    build: .
+    command: "yarn start-scheduler"
+    volumes:
+      - ./:/app
+    env_file: "./env/env"
+  ma_worker:
+    build: .
+    command: "yarn start-worker"
+    volumes:
+      - ./:/app
+    env_file: "./env/env"
+  redis:
+    image: redis:5.0
+    container_name: "ma-redis"
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./data/redis:/data"
