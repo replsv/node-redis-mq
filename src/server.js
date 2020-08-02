@@ -1,17 +1,21 @@
 import Koa from "koa";
 import Router from "koa-router";
 import KoaErrorHandler from "koa-better-error-handler";
+
 // middlewares
 import MBodyParser from "koa-bodyparser";
 import MLogger from "koa-logger";
 import MJson from "koa-json";
 import MCors from "@koa/cors";
 import M404 from "koa-404-handler";
-import { registerScheduleToStorage as MScheduler } from "./middleware/scheduler";
 
-// routes
+// listeners
+import { registerScheduleToStorage as LScheduler } from "./listener/scheduler";
+
+// entity routes
 import HandlerMessage from "./handler/message";
 
+// utils
 import "./util/dotenv";
 import {
   register as registerRedis,
@@ -24,7 +28,8 @@ const start = async () => {
   app.context.onerror = KoaErrorHandler;
 
   middlewares(app);
-  registerRedis(createRedisClient(), app);
+  listeners(app);
+  services(app);
 
   // routes
   routes(router);
@@ -43,14 +48,23 @@ const middlewares = (app) => {
   app.use(MLogger());
   app.use(MCors());
   app.use(M404);
-  MScheduler(app);
+};
+
+const listeners = (app) => {
+  LScheduler(app);
+};
+
+const services = (app) => {
+  registerRedis(createRedisClient(), app);
 };
 
 const routes = (router) => {
+  // status route
   router.get("/status", async (ctx, next) => {
     ctx.body = { success: true };
     await next();
   });
+  // handlers by entity
   HandlerMessage.register(router);
 };
 
